@@ -29,7 +29,6 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-
 .user-badge {
     background-color: #E53935;
     color: white;
@@ -39,13 +38,12 @@ st.markdown("""
     font-weight: bold;
     margin-bottom: 15px;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
 
 # ============================================================
-# PATH LOGO
+# LOGO
 # ============================================================
 
 DIR_SEMASA = (
@@ -134,12 +132,16 @@ def kira_kira_geomatik(df, col_e, col_n, col_stn):
         )
 
         if sec_val >= 60:
+
             sec_val = 0
             min_val += 1
 
         if min_val >= 60:
+
             min_val = 0
-            deg = (deg + 1) % 360
+            deg = (
+                deg + 1
+            ) % 360
 
         bearing_dms.append(
             f'{deg}° {min_val:02d}\' {sec_val:04.1f}"'
@@ -161,7 +163,8 @@ def kira_kira_geomatik(df, col_e, col_n, col_stn):
     )
 
     luas_ekar = (
-        luas_m2 / 4046.8564224
+        luas_m2 /
+        4046.8564224
     )
 
     # --------------------------------------------------------
@@ -177,7 +180,9 @@ def kira_kira_geomatik(df, col_e, col_n, col_stn):
             df[col_stn].iloc[1:]
         )
         +
-        [df[col_stn].iloc[0]]
+        [
+            df[col_stn].iloc[0]
+        ]
     )
 
     # --------------------------------------------------------
@@ -244,7 +249,9 @@ def jana_geojson(
         ])
 
     if coords:
-        coords.append(coords[0])
+        coords.append(
+            coords[0]
+        )
 
     data = {
 
@@ -380,7 +387,7 @@ def jana_dxf(
         ])
 
     # --------------------------------------------------------
-    # LOT
+    # LABEL LOT
     # --------------------------------------------------------
 
     center_e = (
@@ -417,7 +424,9 @@ def jana_dxf(
         "EOF"
     ])
 
-    return "\n".join(lines)
+    return "\n".join(
+        lines
+    )
 
 
 # ============================================================
@@ -452,6 +461,7 @@ def kira_sudut_teks(
         and
         abs(dy) < 1e-12
     ):
+
         return 0
 
     angle = math.degrees(
@@ -461,7 +471,6 @@ def kira_sudut_teks(
         )
     )
 
-    # Elak tulisan terbalik
     if angle > 90:
         angle -= 180
 
@@ -472,21 +481,25 @@ def kira_sudut_teks(
 
 
 # ============================================================
-# BEARING LUAR + JARAK DALAM
+# BEARING + JARAK
+#
+# BEARING:
+#   LUAR GARISAN
+#   TENGAH GARISAN
+#   SEJAJAR DENGAN GARISAN
+#
+# JARAK:
+#   DALAM GARISAN
+#   TENGAH GARISAN
+#   SEJAJAR DENGAN GARISAN
 # ============================================================
 
 def tambah_label_bearing_jarak(
     m,
     lons,
     lats,
-    df_hasil,
-    saiz_bearing=7,
-    saiz_jarak=7
+    df_hasil
 ):
-
-    # --------------------------------------------------------
-    # CENTER POLYGON
-    # --------------------------------------------------------
 
     center_lon = float(
         np.mean(lons)
@@ -496,25 +509,11 @@ def tambah_label_bearing_jarak(
         np.mean(lats)
     )
 
-    # --------------------------------------------------------
-    # OFFSET
-    #
-    # Bearing = luar garisan
-    # Jarak   = dalam garisan
-    # --------------------------------------------------------
-
-    bearing_offset_m = 2.5
-    jarak_offset_m = 2.5
-
-    # --------------------------------------------------------
-    # LOOP SETIAP GARISAN
-    # --------------------------------------------------------
-
     for i, row in df_hasil.iterrows():
 
-        # ====================================================
+        # ----------------------------------------------------
         # TITIK MULA
-        # ====================================================
+        # ----------------------------------------------------
 
         lon1 = float(
             lons[i]
@@ -524,14 +523,13 @@ def tambah_label_bearing_jarak(
             lats[i]
         )
 
-        # ====================================================
+        # ----------------------------------------------------
         # TITIK AKHIR
-        # ====================================================
+        # ----------------------------------------------------
 
         next_i = (
-            (i + 1)
-            % len(lons)
-        )
+            i + 1
+        ) % len(lons)
 
         lon2 = float(
             lons[next_i]
@@ -541,9 +539,9 @@ def tambah_label_bearing_jarak(
             lats[next_i]
         )
 
-        # ====================================================
+        # ----------------------------------------------------
         # TITIK TENGAH
-        # ====================================================
+        # ----------------------------------------------------
 
         mid_lon = (
             lon1 + lon2
@@ -553,9 +551,9 @@ def tambah_label_bearing_jarak(
             lat1 + lat2
         ) / 2
 
-        # ====================================================
-        # SUDUT GARISAN
-        # ====================================================
+        # ----------------------------------------------------
+        # ARAH GARISAN
+        # ----------------------------------------------------
 
         mean_lat = (
             lat1 + lat2
@@ -588,23 +586,24 @@ def tambah_label_bearing_jarak(
             lat2
         )
 
-        # ====================================================
-        # NORMAL KE SISI KIRI GARISAN
-        # ====================================================
+        # ----------------------------------------------------
+        # NORMAL
+        # ----------------------------------------------------
 
         nx = -dy / panjang
         ny = dx / panjang
 
-        # ====================================================
-        # TENTUKAN NORMAL YANG MENUJU KE DALAM LOT
-        # ====================================================
+        # ----------------------------------------------------
+        # ARAH KE TENGAH LOT
+        # ----------------------------------------------------
 
         vector_center_x = (
             (
                 center_lon -
                 mid_lon
             )
-            * math.cos(
+            *
+            math.cos(
                 math.radians(
                     mid_lat
                 )
@@ -626,19 +625,17 @@ def tambah_label_bearing_jarak(
 
         if dot > 0:
 
-            # normal = DALAM
             inside_nx = nx
             inside_ny = ny
 
         else:
 
-            # songsangkan normal
             inside_nx = -nx
             inside_ny = -ny
 
-        # ====================================================
-        # CONVERSION METER -> DEGREE
-        # ====================================================
+        # ----------------------------------------------------
+        # METER -> DEGREE
+        # ----------------------------------------------------
 
         meter_per_degree_lat = 111320
 
@@ -657,10 +654,16 @@ def tambah_label_bearing_jarak(
 
             meter_per_degree_lon = 111320
 
-        # ====================================================
-        # BEARING POSITION
-        # LUAR GARISAN
-        # ====================================================
+        # ----------------------------------------------------
+        # OFFSET
+        # ----------------------------------------------------
+
+        bearing_offset_m = 2.0
+        jarak_offset_m = 2.0
+
+        # ----------------------------------------------------
+        # BEARING = LUAR
+        # ----------------------------------------------------
 
         bearing_lon = (
             mid_lon
@@ -682,10 +685,9 @@ def tambah_label_bearing_jarak(
             )
         )
 
-        # ====================================================
-        # JARAK POSITION
-        # DALAM GARISAN
-        # ====================================================
+        # ----------------------------------------------------
+        # JARAK = DALAM
+        # ----------------------------------------------------
 
         jarak_lon = (
             mid_lon
@@ -707,29 +709,25 @@ def tambah_label_bearing_jarak(
             )
         )
 
-        # ====================================================
-        # NILAI BEARING
-        # ====================================================
+        # ----------------------------------------------------
+        # NILAI
+        # ----------------------------------------------------
 
         bearing_value = str(
             row['Bearing (° \' ")']
         )
-
-        # ====================================================
-        # NILAI JARAK
-        # ====================================================
 
         jarak_value = float(
             row["Jarak (m)"]
         )
 
         # ====================================================
-        # LABEL BEARING
-        # LUAR GARISAN
+        # BEARING HTML
         # ====================================================
 
         bearing_html = f"""
-        <div style="
+        <div class="survey-bearing-label"
+        style="
             transform:
                 translate(-50%, -50%)
                 rotate({angle:.2f}deg);
@@ -744,7 +742,7 @@ def tambah_label_bearing_jarak(
                 Arial, sans-serif;
 
             font-size:
-                {saiz_bearing}px;
+                7px;
 
             font-weight:
                 normal;
@@ -764,9 +762,11 @@ def tambah_label_bearing_jarak(
             pointer-events:
                 none;
         ">
+
             {html.escape(
                 bearing_value
             )}
+
         </div>
         """
 
@@ -790,22 +790,17 @@ def tambah_label_bearing_jarak(
                     0,
                     0
                 )
-            ),
-
-            tooltip=(
-                f"Bearing: "
-                f"{bearing_value}"
             )
 
         ).add_to(m)
 
         # ====================================================
-        # LABEL JARAK
-        # DALAM GARISAN
+        # JARAK HTML
         # ====================================================
 
         jarak_html = f"""
-        <div style="
+        <div class="survey-jarak-label"
+        style="
             transform:
                 translate(-50%, -50%)
                 rotate({angle:.2f}deg);
@@ -820,7 +815,7 @@ def tambah_label_bearing_jarak(
                 Arial, sans-serif;
 
             font-size:
-                {saiz_jarak}px;
+                7px;
 
             font-weight:
                 normal;
@@ -840,7 +835,9 @@ def tambah_label_bearing_jarak(
             pointer-events:
                 none;
         ">
+
             {jarak_value:.3f}m
+
         </div>
         """
 
@@ -864,14 +861,280 @@ def tambah_label_bearing_jarak(
                     0,
                     0
                 )
-            ),
-
-            tooltip=(
-                f"Jarak: "
-                f"{jarak_value:.3f} m"
             )
 
         ).add_to(m)
+
+
+# ============================================================
+# DYNAMIC ZOOM
+#
+# ZOOM 1-16  : LABEL HILANG
+# ZOOM 17    : LABEL KECIL
+# ZOOM 18    : LABEL KECIL
+# ZOOM 19    : NORMAL
+# ZOOM 20    : BESAR SIKIT
+# ZOOM 21    : BESAR
+# ZOOM 22    : SANGAT DEKAT
+# ============================================================
+
+def tambah_dynamic_zoom(m):
+
+    map_name = m.get_name()
+
+    script = f"""
+    <script>
+
+    function updateSurveyZoom() {{
+
+        var map = {map_name};
+
+        var zoom = map.getZoom();
+
+        var bearingLabels =
+            document.querySelectorAll(
+                '.survey-bearing-label'
+            );
+
+        var jarakLabels =
+            document.querySelectorAll(
+                '.survey-jarak-label'
+            );
+
+        var stnLabels =
+            document.querySelectorAll(
+                '.survey-stn-label'
+            );
+
+
+        // ====================================================
+        // ZOOM 1 - 16
+        // ====================================================
+
+        if (zoom <= 16) {{
+
+            bearingLabels.forEach(
+                function(label) {{
+                    label.style.display = 'none';
+                }}
+            );
+
+            jarakLabels.forEach(
+                function(label) {{
+                    label.style.display = 'none';
+                }}
+            );
+
+            stnLabels.forEach(
+                function(label) {{
+                    label.style.display = 'none';
+                }}
+            );
+
+        }}
+
+
+        // ====================================================
+        // ZOOM 17
+        // ====================================================
+
+        else if (zoom == 17) {{
+
+            bearingLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '5px';
+                }}
+            );
+
+            jarakLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '5px';
+                }}
+            );
+
+            stnLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '6px';
+                }}
+            );
+
+        }}
+
+
+        // ====================================================
+        // ZOOM 18
+        // ====================================================
+
+        else if (zoom == 18) {{
+
+            bearingLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '6px';
+                }}
+            );
+
+            jarakLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '6px';
+                }}
+            );
+
+            stnLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '7px';
+                }}
+            );
+
+        }}
+
+
+        // ====================================================
+        // ZOOM 19
+        // ====================================================
+
+        else if (zoom == 19) {{
+
+            bearingLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '7px';
+                }}
+            );
+
+            jarakLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '7px';
+                }}
+            );
+
+            stnLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '8px';
+                }}
+            );
+
+        }}
+
+
+        // ====================================================
+        // ZOOM 20
+        // ====================================================
+
+        else if (zoom == 20) {{
+
+            bearingLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '8px';
+                }}
+            );
+
+            jarakLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '8px';
+                }}
+            );
+
+            stnLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '9px';
+                }}
+            );
+
+        }}
+
+
+        // ====================================================
+        // ZOOM 21
+        // ====================================================
+
+        else if (zoom == 21) {{
+
+            bearingLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '9px';
+                }}
+            );
+
+            jarakLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '9px';
+                }}
+            );
+
+            stnLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '10px';
+                }}
+            );
+
+        }}
+
+
+        // ====================================================
+        // ZOOM 22+
+        // ====================================================
+
+        else {{
+
+            bearingLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '10px';
+                }}
+            );
+
+            jarakLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '10px';
+                }}
+            );
+
+            stnLabels.forEach(
+                function(label) {{
+                    label.style.display = 'block';
+                    label.style.fontSize = '11px';
+                }}
+            );
+
+        }}
+
+    }}
+
+
+    setTimeout(
+        updateSurveyZoom,
+        700
+    );
+
+
+    {map_name}.on(
+        'zoomend',
+        updateSurveyZoom
+    );
+
+    </script>
+    """
+
+    m.get_root().html.add_child(
+        folium.Element(
+            script
+        )
+    )
 
 
 # ============================================================
@@ -995,7 +1258,7 @@ else:
         )
 
         # ----------------------------------------------------
-        # SAIZ STN / LOT
+        # SAIZ
         # ----------------------------------------------------
 
         saiz_tulisan = st.slider(
@@ -1005,23 +1268,42 @@ else:
             value=9
         )
 
-        # ----------------------------------------------------
-        # SATELLITE
-        # ----------------------------------------------------
+        # ====================================================
+        # KAWALAN IMEJ
+        # ====================================================
 
         st.markdown(
-            "<b>🛰️ Kawalan Layer Satelit:</b>",
+            "<b>🛰️ Kawalan Imej Satelit:</b>",
             unsafe_allow_html=True
         )
 
-        papar_satelit = st.checkbox(
-            "📷 Satellite Image",
+        papar_google_satellite = st.checkbox(
+            "🛰️ Google Satellite",
             value=True
         )
 
-        # ----------------------------------------------------
+        papar_google_hybrid = st.checkbox(
+            "🛰️ Google Satellite + Jalan",
+            value=False
+        )
+
+        papar_openstreetmap = st.checkbox(
+            "🗺️ OpenStreetMap",
+            value=False
+        )
+
+        papar_cartodb = st.checkbox(
+            "🌙 CartoDB Dark",
+            value=False
+        )
+
+        st.caption(
+            "Boleh ON/OFF layer imej di atas."
+        )
+
+        # ====================================================
         # PAPARAN
-        # ----------------------------------------------------
+        # ====================================================
 
         st.markdown(
             "<br><b>👁️ Kawalan Paparan:</b>",
@@ -1089,7 +1371,7 @@ else:
 
 
     # ========================================================
-    # CSV BELUM UPLOAD
+    # TIADA CSV
     # ========================================================
 
     if uploaded_file is None:
@@ -1101,7 +1383,7 @@ else:
 
 
     # ========================================================
-    # CSV SUDAH UPLOAD
+    # ADA CSV
     # ========================================================
 
     else:
@@ -1120,7 +1402,6 @@ else:
                 df.columns
             )
 
-
             # ==================================================
             # TETAPAN KOORDINAT
             # ==================================================
@@ -1137,7 +1418,6 @@ else:
                 st.columns(3)
             )
 
-
             # --------------------------------------------------
             # EASTING
             # --------------------------------------------------
@@ -1146,7 +1426,8 @@ else:
 
                 idx_e = (
                     senarai_kolom.index("E")
-                    if "E" in senarai_kolom
+                    if "E"
+                    in senarai_kolom
                     else 0
                 )
 
@@ -1156,7 +1437,6 @@ else:
                     index=idx_e
                 )
 
-
             # --------------------------------------------------
             # NORTHING
             # --------------------------------------------------
@@ -1165,7 +1445,8 @@ else:
 
                 idx_n = (
                     senarai_kolom.index("N")
-                    if "N" in senarai_kolom
+                    if "N"
+                    in senarai_kolom
                     else (
                         1
                         if len(
@@ -1181,7 +1462,6 @@ else:
                     index=idx_n
                 )
 
-
             # --------------------------------------------------
             # STATION
             # --------------------------------------------------
@@ -1190,7 +1470,8 @@ else:
 
                 idx_stn = (
                     senarai_kolom.index("STN")
-                    if "STN" in senarai_kolom
+                    if "STN"
+                    in senarai_kolom
                     else 0
                 )
 
@@ -1200,15 +1481,13 @@ else:
                     index=idx_stn
                 )
 
-
             # ==================================================
-            # LOT / CRS / BASEMAP
+            # LOT / CRS
             # ==================================================
 
-            col_lot, col_crs, col_map = (
-                st.columns(3)
+            col_lot, col_crs = (
+                st.columns(2)
             )
-
 
             with col_lot:
 
@@ -1216,7 +1495,6 @@ else:
                     "No. Lot",
                     value="308"
                 )
-
 
             with col_crs:
 
@@ -1229,19 +1507,6 @@ else:
                     ],
                     index=0
                 )
-
-
-            with col_map:
-
-                pilihan_basemap = st.selectbox(
-                    "Basemap",
-                    [
-                        "🗺️ OpenStreetMap",
-                        "🌙 CartoDB Dark",
-                        "⚪ White Background"
-                    ]
-                )
-
 
             # ==================================================
             # EPSG
@@ -1263,7 +1528,6 @@ else:
                     step=1
                 )
 
-
             # ==================================================
             # KIRAAN
             # ==================================================
@@ -1279,7 +1543,6 @@ else:
                 sel_n,
                 sel_stn
             )
-
 
             # ==================================================
             # HASIL LUAS
@@ -1311,7 +1574,6 @@ else:
                 "Ekar",
                 f"{luas_ekar:,.4f}"
             )
-
 
             # ==================================================
             # JADUAL
@@ -1353,7 +1615,6 @@ else:
                     ],
                     use_container_width=True
                 )
-
 
             # ==================================================
             # EXPORT
@@ -1409,7 +1670,6 @@ else:
                     use_container_width=True
                 )
 
-
             # ==================================================
             # KOORDINAT
             # ==================================================
@@ -1425,7 +1685,6 @@ else:
                 .astype(float)
                 .values
             )
-
 
             # ==================================================
             # CONVERT CRS
@@ -1464,7 +1723,6 @@ else:
                 lons = e_vals
                 lats = n_vals
 
-
             # ==================================================
             # CENTER
             # ==================================================
@@ -1477,7 +1735,6 @@ else:
                 np.mean(lons)
             )
 
-
             # ==================================================
             # TABS
             # ==================================================
@@ -1489,12 +1746,18 @@ else:
                 ])
             )
 
-
             # ==================================================
             # PETA UTAMA
             # ==================================================
 
             with tab_peta:
+
+                # =================================================
+                # MAP
+                #
+                # max_zoom = 22
+                # BOLEH ZOOM DEKAT
+                # =================================================
 
                 m = folium.Map(
 
@@ -1503,65 +1766,137 @@ else:
                         center_lon
                     ],
 
-                    zoom_start=18,
+                    zoom_start=19,
 
-                    control_scale=True
+                    min_zoom=1,
+
+                    max_zoom=22,
+
+                    control_scale=True,
+
+                    prefer_canvas=True,
+
+                    tiles=None
                 )
 
-
                 # =================================================
-                # BASEMAP
-                # =================================================
-
-                if "OpenStreetMap" in (
-                    pilihan_basemap
-                ):
-
-                    folium.TileLayer(
-                        "OpenStreetMap",
-                        name="OpenStreetMap"
-                    ).add_to(m)
-
-                elif "CartoDB Dark" in (
-                    pilihan_basemap
-                ):
-
-                    folium.TileLayer(
-                        "CartoDB dark_matter",
-                        name="CartoDB Dark"
-                    ).add_to(m)
-
-
-                # =================================================
-                # SATELLITE
+                # GOOGLE SATELLITE
                 # =================================================
 
-                if papar_satelit:
+                google_satellite = folium.TileLayer(
 
-                    folium.TileLayer(
+                    tiles=(
+                        "https://mt1.google.com/vt/"
+                        "lyrs=s&x={x}&y={y}&z={z}"
+                    ),
 
-                        tiles=(
-                            "https://server.arcgisonline.com/"
-                            "ArcGIS/rest/services/"
-                            "World_Imagery/"
-                            "MapServer/tile/{z}/{y}/{x}"
-                        ),
+                    attr="Google Satellite",
 
-                        attr=(
-                            "Esri World Imagery"
-                        ),
+                    name="🛰️ Google Satellite",
 
-                        name="Satellite",
+                    overlay=False,
 
-                        overlay=True,
+                    control=True,
 
-                        control=True
+                    show=papar_google_satellite,
 
-                    ).add_to(m)
+                    max_native_zoom=20,
 
+                    max_zoom=22
+                )
+
+                google_satellite.add_to(
+                    m
+                )
 
                 # =================================================
-                # POLYGON
+                # GOOGLE HYBRID
+                # SATELLITE + JALAN
+                # =================================================
+
+                google_hybrid = folium.TileLayer(
+
+                    tiles=(
+                        "https://mt1.google.com/vt/"
+                        "lyrs=y&x={x}&y={y}&z={z}"
+                    ),
+
+                    attr="Google Hybrid",
+
+                    name="🛰️ Google Satellite + Jalan",
+
+                    overlay=False,
+
+                    control=True,
+
+                    show=papar_google_hybrid,
+
+                    max_native_zoom=20,
+
+                    max_zoom=22
+                )
+
+                google_hybrid.add_to(
+                    m
+                )
+
+                # =================================================
+                # OPEN STREET MAP
+                # =================================================
+
+                osm = folium.TileLayer(
+
+                    tiles="OpenStreetMap",
+
+                    name="🗺️ OpenStreetMap",
+
+                    overlay=False,
+
+                    control=True,
+
+                    show=papar_openstreetmap,
+
+                    max_native_zoom=19,
+
+                    max_zoom=22
+                )
+
+                osm.add_to(
+                    m
+                )
+
+                # =================================================
+                # CARTODB DARK
+                # =================================================
+
+                cartodb = folium.TileLayer(
+
+                    tiles=(
+                        "https://{s}.basemaps.cartocdn.com/"
+                        "dark_all/{z}/{x}/{y}{r}.png"
+                    ),
+
+                    attr="CartoDB",
+
+                    name="🌙 CartoDB Dark",
+
+                    overlay=False,
+
+                    control=True,
+
+                    show=papar_cartodb,
+
+                    max_native_zoom=19,
+
+                    max_zoom=22
+                )
+
+                cartodb.add_to(
+                    m
+                )
+
+                # =================================================
+                # POLYGON POINTS
                 # =================================================
 
                 points = [
@@ -1577,10 +1912,14 @@ else:
                 ]
 
                 if points:
+
                     points.append(
                         points[0]
                     )
 
+                # =================================================
+                # SEMPADAN LOT
+                # =================================================
 
                 if papar_sempadan:
 
@@ -1603,11 +1942,12 @@ else:
                             f"{lot_name_input}"
                         )
 
-                    ).add_to(m)
-
+                    ).add_to(
+                        m
+                    )
 
                 # =================================================
-                # STATION / BATU SEMPADAN
+                # BATU SEMPADAN + STN
                 # =================================================
 
                 if papar_batu_sempadan:
@@ -1617,7 +1957,7 @@ else:
                     ):
 
                         # -----------------------------------------
-                        # BULATAN STATION
+                        # BATU SEMPADAN
                         # -----------------------------------------
 
                         folium.CircleMarker(
@@ -1627,7 +1967,7 @@ else:
                                 float(lons[i])
                             ],
 
-                            radius=6,
+                            radius=5,
 
                             color="red",
 
@@ -1642,12 +1982,57 @@ else:
                                 f"{df.iloc[i][sel_stn]}"
                             )
 
-                        ).add_to(m)
-
+                        ).add_to(
+                            m
+                        )
 
                         # -----------------------------------------
                         # LABEL STN
                         # -----------------------------------------
+
+                        stn_html = f"""
+                        <div
+                            class="survey-stn-label"
+                            style="
+                                transform:
+                                    translate(
+                                        -50%,
+                                        -160%
+                                    );
+
+                                color:
+                                    white;
+
+                                font-family:
+                                    Arial,
+                                    sans-serif;
+
+                                font-size:
+                                    8px;
+
+                                font-weight:
+                                    bold;
+
+                                white-space:
+                                    nowrap;
+
+                                text-shadow:
+                                    -1px -1px 0 black,
+                                     1px -1px 0 black,
+                                    -1px  1px 0 black,
+                                     1px  1px 0 black;
+
+                                pointer-events:
+                                    none;
+                            "
+                        >
+                            STN {html.escape(
+                                str(
+                                    df.iloc[i][sel_stn]
+                                )
+                            )}
+                        </div>
+                        """
 
                         folium.Marker(
 
@@ -1658,52 +2043,25 @@ else:
 
                             icon=folium.DivIcon(
 
-                                html=f"""
-                                <div style="
-                                    transform:
-                                    translate(-50%, -160%);
+                                html=stn_html,
 
-                                    color:white;
+                                icon_size=(
+                                    1,
+                                    1
+                                ),
 
-                                    font-size:
-                                    {saiz_tulisan}px;
-
-                                    font-weight:bold;
-
-                                    white-space:
-                                    nowrap;
-
-                                    text-shadow:
-                                    -1px -1px 0 #000,
-                                     1px -1px 0 #000,
-                                    -1px  1px 0 #000,
-                                     1px  1px 0 #000;
-                                ">
-                                    STN {html.escape(
-                                        str(
-                                            df.iloc[i][sel_stn]
-                                        )
-                                    )}
-                                </div>
-                                """
-
+                                icon_anchor=(
+                                    0,
+                                    0
+                                )
                             )
 
-                        ).add_to(m)
-
+                        ).add_to(
+                            m
+                        )
 
                 # =================================================
                 # BEARING + JARAK
-                #
-                # BEARING:
-                #   - LUAR GARISAN
-                #   - TENGAH GARISAN
-                #   - SELARI DENGAN GARISAN
-                #
-                # JARAK:
-                #   - DALAM GARISAN
-                #   - TENGAH GARISAN
-                #   - SELARI DENGAN GARISAN
                 # =================================================
 
                 if papar_bearing_jarak:
@@ -1716,16 +2074,11 @@ else:
 
                         lats,
 
-                        df_hasil,
-
-                        saiz_bearing=7,
-
-                        saiz_jarak=7
+                        df_hasil
                     )
 
-
                 # =================================================
-                # LOT + LUAS
+                # NO LOT + LUAS
                 # =================================================
 
                 if papar_lot_luas:
@@ -1749,6 +2102,49 @@ else:
                         f"</b>"
                     )
 
+                    lot_html = f"""
+                    <div
+                        class="survey-lot-label"
+                        style="
+                            transform:
+                                translate(
+                                    -50%,
+                                    -50%
+                                );
+
+                            color:
+                                #00FFFF;
+
+                            font-family:
+                                Arial,
+                                sans-serif;
+
+                            font-size:
+                                {saiz_tulisan + 2}px;
+
+                            font-weight:
+                                bold;
+
+                            text-align:
+                                center;
+
+                            white-space:
+                                nowrap;
+
+                            text-shadow:
+                                -1px -1px 0 #000,
+                                 1px -1px 0 #000,
+                                -1px  1px 0 #000,
+                                 1px  1px 0 #000;
+
+                            pointer-events:
+                                none;
+                        "
+                    >
+                        {lot_text}
+                    </div>
+                    """
+
                     folium.Marker(
 
                         location=[
@@ -1758,45 +2154,44 @@ else:
 
                         icon=folium.DivIcon(
 
-                            html=f"""
-                            <div style="
-                                transform:
-                                translate(-50%, -50%);
+                            html=lot_html,
 
-                                color:#00FFFF;
+                            icon_size=(
+                                1,
+                                1
+                            ),
 
-                                font-size:
-                                {saiz_tulisan + 2}px;
-
-                                font-weight:bold;
-
-                                text-align:center;
-
-                                white-space:nowrap;
-
-                                text-shadow:
-                                -1px -1px 0 #000,
-                                 1px -1px 0 #000,
-                                -1px  1px 0 #000,
-                                 1px  1px 0 #000;
-                            ">
-                                {lot_text}
-                            </div>
-                            """
-
+                            icon_anchor=(
+                                0,
+                                0
+                            )
                         )
 
-                    ).add_to(m)
-
+                    ).add_to(
+                        m
+                    )
 
                 # =================================================
                 # LAYER CONTROL
                 # =================================================
 
                 folium.LayerControl(
-                    position="topright"
-                ).add_to(m)
 
+                    position="topright",
+
+                    collapsed=False
+
+                ).add_to(
+                    m
+                )
+
+                # =================================================
+                # DYNAMIC ZOOM
+                # =================================================
+
+                tambah_dynamic_zoom(
+                    m
+                )
 
                 # =================================================
                 # PAPAR PETA
@@ -1810,7 +2205,9 @@ else:
 
                     height=720,
 
-                    returned_objects=[]
+                    returned_objects=[],
+
+                    key="main_map"
                 )
 
 
@@ -1826,10 +2223,8 @@ else:
 
                 st.caption(
                     "Gunakan alat di sebelah kiri "
-                    "peta untuk melukis poligon, "
-                    "garisan atau marker."
+                    "peta untuk melukis."
                 )
-
 
                 m2 = folium.Map(
 
@@ -1838,39 +2233,104 @@ else:
                         center_lon
                     ],
 
-                    zoom_start=18
+                    zoom_start=19,
+
+                    min_zoom=1,
+
+                    max_zoom=22,
+
+                    control_scale=True,
+
+                    prefer_canvas=True,
+
+                    tiles=None
                 )
 
+                # =================================================
+                # GOOGLE SATELLITE
+                # =================================================
 
-                # ------------------------------------------------
-                # SATELLITE
-                # ------------------------------------------------
+                folium.TileLayer(
 
-                if papar_satelit:
+                    tiles=(
+                        "https://mt1.google.com/vt/"
+                        "lyrs=s&x={x}&y={y}&z={z}"
+                    ),
 
-                    folium.TileLayer(
+                    attr="Google Satellite",
 
-                        tiles=(
-                            "https://server.arcgisonline.com/"
-                            "ArcGIS/rest/services/"
-                            "World_Imagery/"
-                            "MapServer/tile/{z}/{y}/{x}"
-                        ),
+                    name="🛰️ Google Satellite",
 
-                        attr="Esri",
+                    overlay=False,
 
-                        name="Satellite",
+                    control=True,
 
-                        overlay=False,
+                    show=True,
 
-                        control=True
+                    max_native_zoom=20,
 
-                    ).add_to(m2)
+                    max_zoom=22
 
+                ).add_to(
+                    m2
+                )
 
-                # ------------------------------------------------
+                # =================================================
+                # GOOGLE HYBRID
+                # =================================================
+
+                folium.TileLayer(
+
+                    tiles=(
+                        "https://mt1.google.com/vt/"
+                        "lyrs=y&x={x}&y={y}&z={z}"
+                    ),
+
+                    attr="Google Hybrid",
+
+                    name="🛰️ Google Satellite + Jalan",
+
+                    overlay=False,
+
+                    control=True,
+
+                    show=False,
+
+                    max_native_zoom=20,
+
+                    max_zoom=50
+
+                ).add_to(
+                    m2
+                )
+
+                # =================================================
+                # OPEN STREET MAP
+                # =================================================
+
+                folium.TileLayer(
+
+                    "OpenStreetMap",
+
+                    name="🗺️ OpenStreetMap",
+
+                    overlay=False,
+
+                    control=True,
+
+                    show=False,
+
+                    max_native_zoom=19,
+
+                    max_zoom=50
+
+                ).add_to(
+                    m2
+                )
+
+                # =================================================
                 # POLYGON
-                # ------------------------------------------------
+                # =================================================
 
                 if points:
 
@@ -1888,12 +2348,13 @@ else:
 
                         fill_opacity=0.35
 
-                    ).add_to(m2)
+                    ).add_to(
+                        m2
+                    )
 
-
-                # ------------------------------------------------
+                # =================================================
                 # DRAW TOOL
-                # ------------------------------------------------
+                # =================================================
 
                 draw = Draw(
 
@@ -1907,17 +2368,23 @@ else:
 
                     draw_options={
 
-                        "polyline": True,
+                        "polyline":
+                            True,
 
-                        "polygon": True,
+                        "polygon":
+                            True,
 
-                        "rectangle": True,
+                        "rectangle":
+                            True,
 
-                        "circle": False,
+                        "circle":
+                            False,
 
-                        "marker": True,
+                        "marker":
+                            True,
 
-                        "circlemarker": False
+                        "circlemarker":
+                            False
                     },
 
                     edit_options={
@@ -1934,10 +2401,23 @@ else:
                     m2
                 )
 
+                # =================================================
+                # LAYER CONTROL
+                # =================================================
 
-                # ------------------------------------------------
+                folium.LayerControl(
+
+                    position="topright",
+
+                    collapsed=False
+
+                ).add_to(
+                    m2
+                )
+
+                # =================================================
                 # PAPAR
-                # ------------------------------------------------
+                # =================================================
 
                 output_lukisan = st_folium(
 
@@ -1950,10 +2430,9 @@ else:
                     key="folium_draw_map"
                 )
 
-
-                # ------------------------------------------------
+                # =================================================
                 # GEOJSON
-                # ------------------------------------------------
+                # =================================================
 
                 if (
                     output_lukisan
@@ -1973,11 +2452,9 @@ else:
                         ]
                     )
 
-
         except Exception as e:
 
             st.error(
                 f"Ralat semasa membaca/"
                 f"memproses fail: {e}"
             )
-
